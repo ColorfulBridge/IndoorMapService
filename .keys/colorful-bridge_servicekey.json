@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "colorful-bridge",
+  "private_key_id": "6f74bc7a08a59026d12af611fc182539e0abb909",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCl6Amnc04AemcN\nRYXQ5rq+F7BXQeKHpMQhpKYfdQeiYwZdJ4ZgNLyIJ0qkqHjDidhPK65plSTDcsIG\nw8/kuO6gfowJtg+LqH/ad+70N5NtHzGa9e1bghsQ04EZDrSb1HbTSb/9oO4qJUNX\n0ZYhWUI9HSAahY15zwBYkNXF0SYI2GHR/lludfOU6SBHJjNeGTU8i6fzu04bp+GR\n8R19j8jNkt9i0k95NEJkP9N+9IkpYXqDDw+54lIlz+My0tI0pUTTYfhTh60RPRVj\ndZWqH8pjzYKhEO/MWX33748A5TszuCJxmbCdgdtA/5WeFCgp2xtDbsp04+DGuFHa\nbKfdOBABAgMBAAECggEAJBMLkFnR1uhGopvgoD8fUWiwuxR0J5bz37XfulzV22Ep\nV9WZki89ZGSYxits0OXW/0YJ/2LC8u2v000+FeeBWawSkqUABdfObyhfcMJp39Ml\n0+JQKXLlpDe9LT/llTGyYbh6UvGsf8UI+t4zhQ5VyRida67pB5izZE6f8QrMeKUM\nkAHJK3Z4moMwABThy/iL9FK5ZXiWwGJgPLniVuy3rMheoE+BnSiuxIZecxgiPtF0\ngAHn4NHub0DT/hj9LkrHvIJKAglINsyrVXR9RUdafonWE+zK39FFHUWy2GoFpFJa\n4FV9BtFLfnC0lTg83F2nCZJowXq0tTL8sCwoHp2tDQKBgQDXZMlHMVSNFv96PYCI\nBUZ+DA2X7ERGKOG/4Mi+QzMpK93EYlHOzBcLdwFD3MKzvHsnjVcX+oTB2FETZaGx\niFu2M8h2ax4Ha49FYAqDlVUesXVQfbQbsFbzV5eWa4IY1o70c5WFG8dPy7tOQn5N\njRLm2QxekARKRwRf2K7NA5cmFQKBgQDFLuwa2AcV5Nuq2zloadxgnIPMYUUvLK0R\nncoo842m0m5d9Q+FKPBShWgT5OMA4MyX0Z2wB176cp1OhCJ8aJ2KhbZShl7D1veI\nSZdU0uimERMrVp0KyF5gtIe8nZ4Onn+HBXqAMgJu+JIkMYLRqy9XW28zrimzs7Ye\n/wuT9PhJPQKBgQCAi52z5zTWnwsJIPs8MinHv9m8+TwlwvA3WydypRg7Ufqf4S2B\nhTublAIlRfLM4Yd+K1P284OXTEnWkajWEtLpAi54vaTGOOLgPFkJ/m02TCH/T4XV\noH/D6lqFYtPZjvLx4KkzL0jbznKSWgyWq8LEEnTXWou06H0r1l077RCfoQKBgHEZ\n6/WtycqmHdXPrwsUBYMo43RcqslXT+IV5ro8kRiKBSJBiWhwxgAfY0Zd+FMtnkzK\nwC8S20i+azp5EirX+t1UuvJ0/nBIomz7ASF3ZFi03JD0OlnP+kpv4peutNVf1nhF\nDTHw/XJXg8Pc3lOTZDEwUgWLtYHM5/65fhOc5LllAoGAMiRjgwB2Dr+1OeJyc9rG\noAW3CJ62Wj0cgMwbzJGERkZWQpz9/6Lp31k8KY+QCZjKogdQIECY8zqur7xHjK23\n3J6Y/kIUm3UocT1X5RvwuG7/pyjMsZJCNfvfbZvSR/eAhm1O6/Z3j7cYSNMvN4lF\npA8eyPD9amDBg8IFh4gyFeo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "storageaccess@colorful-bridge.iam.gserviceaccount.com",
+  "client_id": "101292937568478958900",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/storageaccess%40colorful-bridge.iam.gserviceaccount.com"
+}

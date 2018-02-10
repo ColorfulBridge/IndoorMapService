@@ -14,10 +14,8 @@ import (
 	"strings"
 
 	"cloud.google.com/go/storage"
-
-	"google.golang.org/appengine"
-
 	"golang.org/x/net/context"
+	"google.golang.org/appengine"
 )
 
 var (
@@ -57,7 +55,7 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 
 	ctx := appengine.NewContext(r)
 
-	var splits []string = strings.Split(r.URL.Path, "/")
+	splits := strings.Split(r.URL.Path, "/")
 
 	if len(splits) != 8 {
 		msg := fmt.Sprintf("Incorrect url format, expected /map/{mapname}/{style}/{level}/{col}/{row}/tile.png")
