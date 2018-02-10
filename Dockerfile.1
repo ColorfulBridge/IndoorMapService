@@ -1,17 +1,16 @@
-# build image
 FROM golang:onbuild
 
-# prepare and copy content
 ARG pkg=github.com/ColorfulBridge/IndoorMapTileServer
+RUN apk add --no-cache ca-certificates
+
 COPY . $GOPATH/src/$pkg
+RUN set -ex \
+      && apk add --no-cache --virtual .build-deps \
+              git \
+      && go get -v $pkg/... \
+      && apk del .build-deps
+RUN go install $pkg 
 
-# get dependencies and install
-WORKDIR $GOPATH/src/$pkg
-RUN go get
-RUN go install
-
-###################### RUN #############################
-#run image
 FROM golang:alpine
 
 COPY --from=0 /go/bin/IndoorMapTileServer /go/bin/IndoorMapTileServer
