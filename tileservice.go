@@ -6,21 +6,21 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"encoding/json"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
+	"google.golang.org/api/iterator"
 	"google.golang.org/appengine"
 )
-
 
 var (
 	storageClient *storage.Client
@@ -38,6 +38,8 @@ func main() {
 	}
 
 	http.HandleFunc("/map/", serveMapTile)
+	http.HandleFunc("/maps/", listMaps)
+	http.HandleFunc("/mapconfig/", getMapConfiguration)
 	http.HandleFunc("/", runinfo)
 	//http.HandleFunc("/upload", uploadHandler)
 
@@ -49,6 +51,41 @@ func runinfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "url "+r.URL.Path)
 }
 
+func listMaps(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
+	ctx := appengine.NewContext(r)
+	bucket := storageClient.Bucket(bucketName)
+
+	query := storage.Query{Delimiter: "/", Prefix: "", Versions: false}
+	objit := bucket.Objects(ctx, &query)
+
+	mapList := []string{}
+
+	for {
+		objAttrs, err := objit.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			checkErrors(w, err)
+		}
+		mapname := objAttrs.Prefix
+		mapname = mapname[0 : len(mapname)-1]
+		mapList = append(mapList, mapname)
+	}
+
+	resultData, err := json.Marshal(mapList)
+	checkErrors(w, err)
+
+	w.Header().Add("content-type", "application/json")
+	fmt.Fprint(w, string(resultData))
+}
+
 func serveMapTile(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
@@ -56,13 +93,13 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Recovered in f", r)
 		}
 	}()
-	
+
 	ctx := appengine.NewContext(r)
 	bucket := storageClient.Bucket(bucketName)
 
 	splits := strings.Split(r.URL.Path, "/")
 	trf, _ := r.URL.Query()["transform"]
-	
+
 	if len(splits) != 8 {
 		msg := fmt.Sprintf("Incorrect url format, expected /map/{mapname}/{style}/{level}/{col}/{row}/tile.png")
 		http.Error(w, msg, http.StatusBadRequest)
@@ -79,11 +116,11 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 	//Check that level col and row are ints
 
 	//Get Transformation (if available)
-	if(trf != nil && trf[0] != ""){
-		trfFilename := mapname + "/" + style + "/" + trf[0] + ".json"		
+	if trf != nil && trf[0] != "" {
+		trfFilename := mapname + "/" + style + "/" + trf[0] + ".json"
 		trfreader, err := bucket.Object(trfFilename).NewReader(ctx)
 		if err != nil {
-			trfFilename := mapname + "/" + trf[0] + ".json"		
+			trfFilename := mapname + "/" + trf[0] + ".json"
 			trfreader, err = bucket.Object(trfFilename).NewReader(ctx)
 			if err != nil {
 				msg := fmt.Sprintf("Could not get transformation: %v for %v", err, trfFilename)
@@ -100,9 +137,9 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 
 		//Transform
 		level = level - int(trules["level"].(float64))
-		col = col - (level + 1) * int(trules["col"].(float64))
-		row = row - (level + 1) * int(trules["row"].(float64))
-		
+		col = col - (level+1)*int(trules["col"].(float64))
+		row = row - (level+1)*int(trules["row"].(float64))
+
 	}
 
 	//Construct map path
@@ -129,6 +166,53 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func getMapConfiguration(w http.ResponseWriter, r *http.Request) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
+	ctx := appengine.NewContext(r)
+	bucket := storageClient.Bucket(bucketName)
+
+	splits := strings.Split(r.URL.Path, "/")
+
+	if len(splits) != 4 {
+		msg := fmt.Sprintf("Incorrect url format, expected /mapconfig/{mapname}/{configuration}")
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	//Get splits
+	mapname := splits[2]
+	config := splits[3]
+
+	//Construct map path
+	filename := mapname + "/" + config + ".json"
+
+	//Get the file
+	reader, err := bucket.Object(filename).NewReader(ctx)
+	if err != nil {
+		msg := fmt.Sprintf("Could not get file from store: %v for %v", err, filename)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	defer reader.Close()
+
+	w.Header().Add("content-type", "application/json")
+
+	//Copy the content
+	_, err2 := io.Copy(w, reader)
+	if err2 != nil {
+		msg := fmt.Sprintf("Could not return file: %v", err)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+
+}
+
 func checkErrors(w http.ResponseWriter, err error) {
 	if err != nil {
 		fmt.Fprint(w, err.Error())
@@ -136,39 +220,3 @@ func checkErrors(w http.ResponseWriter, err error) {
 		panic(err.Error())
 	}
 }
-
-/*
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "", http.StatusMethodNotAllowed)
-		return
-	}
-
-	ctx := appengine.NewContext(r)
-
-	f, fh, err := r.FormFile("file")
-	if err != nil {
-		msg := fmt.Sprintf("Could not get file: %v", err)
-		http.Error(w, msg, http.StatusBadRequest)
-		return
-	}
-	defer f.Close()
-
-	sw := storageClient.Bucket(bucket).Object(fh.Filename).NewWriter(ctx)
-	if _, err := io.Copy(sw, f); err != nil {
-		msg := fmt.Sprintf("Could not write file: %v", err)
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
-	}
-
-	if err := sw.Close(); err != nil {
-		msg := fmt.Sprintf("Could not put file: %v", err)
-		http.Error(w, msg, http.StatusInternalServerError)
-		return
-	}
-
-	u, _ := url.Parse("/" + bucket + "/" + sw.Attrs().Name)
-
-	fmt.Fprintf(w, "Successful! URL: https://storage.googleapis.com%s", u.EscapedPath())
-}
-*/
