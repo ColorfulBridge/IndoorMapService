@@ -8,15 +8,19 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"encoding/json"
 	"os"
 	"strings"
+	"strconv"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 )
+
 
 var (
 	storageClient *storage.Client
@@ -52,11 +56,13 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Recovered in f", r)
 		}
 	}()
-
+	
 	ctx := appengine.NewContext(r)
+	bucket := storageClient.Bucket(bucketName)
 
 	splits := strings.Split(r.URL.Path, "/")
-
+	trf, _ := r.URL.Query()["transform"]
+	
 	if len(splits) != 8 {
 		msg := fmt.Sprintf("Incorrect url format, expected /map/{mapname}/{style}/{level}/{col}/{row}/tile.png")
 		http.Error(w, msg, http.StatusBadRequest)
@@ -66,20 +72,46 @@ func serveMapTile(w http.ResponseWriter, r *http.Request) {
 	//Get splits
 	mapname := splits[2]
 	style := splits[3]
-	level := splits[4]
-	col := splits[5]
-	row := splits[6]
+	level, _ := strconv.Atoi(splits[4])
+	col, _ := strconv.Atoi(splits[5])
+	row, _ := strconv.Atoi(splits[6])
 
 	//Check that level col and row are ints
 
+	//Get Transformation (if available)
+	if(trf != nil && trf[0] != ""){
+		trfFilename := mapname + "/" + style + "/" + trf[0] + ".json"		
+		trfreader, err := bucket.Object(trfFilename).NewReader(ctx)
+		if err != nil {
+			trfFilename := mapname + "/" + trf[0] + ".json"		
+			trfreader, err = bucket.Object(trfFilename).NewReader(ctx)
+			if err != nil {
+				msg := fmt.Sprintf("Could not get transformation: %v for %v", err, trfFilename)
+				http.Error(w, msg, http.StatusBadRequest)
+				return
+			}
+		}
+		defer trfreader.Close()
+
+		transfContent, err := ioutil.ReadAll(trfreader)
+		var trules map[string]interface{}
+		err = json.Unmarshal(transfContent, &trules)
+		checkErrors(w, err)
+
+		//Transform
+		level = level - int(trules["level"].(float64))
+		col = col - (level + 1) * int(trules["col"].(float64))
+		row = row - (level + 1) * int(trules["row"].(float64))
+		
+	}
+
 	//Construct map path
-	filename := mapname + "/" + style + "/" + string(level) + "/" + string(col) + "/" + string(row) + ".png"
+	filename := mapname + "/" + style + "/" + strconv.Itoa(level) + "/" + strconv.Itoa(col) + "/" + strconv.Itoa(row) + ".png"
 
 	//Get the file
-	bucket := storageClient.Bucket(bucketName)
 	reader, err := bucket.Object(filename).NewReader(ctx)
 	if err != nil {
-		msg := fmt.Sprintf("Could not get file from store: %v", err)
+		msg := fmt.Sprintf("Could not get file from store: %v for %v", err, filename)
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
